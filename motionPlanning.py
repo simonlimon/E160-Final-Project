@@ -2,6 +2,11 @@ import networkx as nx
 import math
 import random
 import matplotlib.pyplot as plt
+from Node import *
+
+startNode = Node(0, 0, 0)
+endNode = Node(0, 0, 0)
+numNodes = 0
 
 # Create a random maze with the given number of nodes for testing.  It is
 # guaranteed to be connected. And the maximum number of nodes that a node can
@@ -11,7 +16,16 @@ def randGraphMaze(numNodes, hasLoops):
 
     G = nx.Graph()
 
+    # The grid boundaries are -maxX < x < maxX and -maxY < y < maxY
+    maxX = 1000
+    maxY = 1000
+
     for i in range(numNodes):
+
+        # Put the new node at a random place on the grid
+        newX = (random.random() * maxX * 2) - maxX
+        newY = (random.random() * maxY * 2) - maxY
+        newNode = Node(newX, newY, i)
 
         # Connect the node to the network appropriately
         if i > 0:
@@ -19,15 +33,25 @@ def randGraphMaze(numNodes, hasLoops):
                 candidate = random.choice(list(G.nodes))
 
                 if len(list(G.neighbors(candidate))) < 4:
-                    G.add_node(i)
-                    G.add_edge(candidate, i)
+
+                    G.add_node(newNode)
+                    G.add_edge(candidate, newNode, length=distance(candidate, newNode))
+
                     break
         else:
-            G.add_node(i)
+            G.add_node(newNode)
 
-    # Add the extra edges to create loops
+        if i == 0:
+            global startNode
+            startNode = newNode
+        elif i < 0.9*numNodes:
+            global endNode
+            endNode = newNode
+
+    # Add the extra edges to create loops and therefore multiple paths to get to
+    # the same point
     if hasLoops:
-        numNewEdges = int(random.random() * min(numNodes/2, 10))
+        numNewEdges = int(random.random() * numNodes/2)
 
         for i in range(numNewEdges):
             while(True):
@@ -81,10 +105,38 @@ def breadthFirstDirections(G, startNode, endNode):
 
     return pathsDict[endNode]
 
+# Find the shortest path with A*
+def aStarDirections(G, startNode, endNode):
+
+    return nx.astar_path(G, startNode, endNode, heuristic=distance, weight='length')
+
+# Calculate the distance between two nodes
+def distance(nodeA, nodeB):
+    return ((nodeA.x-nodeB.x)**2 + (nodeA.y-nodeB.y)**2)**0.5
+
+# Calculate the total distance traveled for a path
+def pathDistance(path):
+    dist = 0
+
+    for i in range(1, len(path)):
+        dist += distance(path[i-1], path[i])
+
+    return dist
 
 def main():
-    G = randGraphMaze(50, True)
-    print('The path: ', breadthFirstDirections(G, 1, 29))
+    global numNodes
+    numNodes = 50
+
+    G = randGraphMaze(numNodes, True)
+    breadthPath = breadthFirstDirections(G, startNode, endNode)
+    aStarPath = aStarDirections(G, startNode, endNode)
+    print('Breadth path: ', breadthPath)
+    print('A* path: ', aStarPath)
+
+
+
+    print('\n Breadth Distance: ', pathDistance(breadthPath))
+    print('A* Distance: ', pathDistance(aStarPath))
 
     drawMaze(G)
 
