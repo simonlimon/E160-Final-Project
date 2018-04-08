@@ -33,7 +33,7 @@ def randGraphMaze(numNodes, hasLoops):
             while(True):
                 node1 = random.choice(list(G.nodes))
                 node2 = random.choice(list(G.nodes))
-                print(list(G.neighbors(node2)))
+
                 while(node1 in list(G.neighbors(node2))):
                     node2 = random.choice(list(G.nodes))
 
@@ -45,9 +45,10 @@ def randGraphMaze(numNodes, hasLoops):
 # Visualize a given graph
 def drawMaze(G):
 
-    options = {'node_color': 'black',
+    options = {'node_color': 'red',
                 'node_size': 100,
-                'width': 3}
+                'width': 3,
+                'with_labels': True}
 
     plt.figure(6)
     nx.draw_kamada_kawai(G, **options)
@@ -55,10 +56,36 @@ def drawMaze(G):
 
     plt.show()
 
+# Uses breadth first search starting at the start node to find the quickest
+# path to the end node.  Returns a list with the nodes that must be visited in
+# order from start to finish. Crashes if the endNode does not exist in G.
+def breadthFirstDirections(G, startNode, endNode):
+    pathsDict = {startNode: [startNode]}
+    isFound = False
+
+    if endNode == startNode:
+        isFound = True
+
+    iter = nx.bfs_successors(G, startNode)
+    current = next(iter)
+
+    # iterate through the graph, remembering the path to get to each node
+    while(not isFound):
+        for node in current[1]:
+            pathsDict[node] = pathsDict[current[0]] + [node]
+
+        if endNode in current[1]:
+            isFound = True
+        else:
+            current = next(iter)
+
+    return pathsDict[endNode]
+
+
 def main():
     G = randGraphMaze(50, True)
-    print(G.number_of_edges(), ", ", G.number_of_nodes())
-    print(nx.is_connected(G))
+    print('The path: ', breadthFirstDirections(G, 1, 29))
+
     drawMaze(G)
 
 
