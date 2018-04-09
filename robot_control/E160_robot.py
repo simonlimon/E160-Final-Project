@@ -35,8 +35,19 @@ class E160_robot:
         self.last_encoder_measurements = [0, 0]
         self.encoder_measurements = [0, 0]
         self.range_measurements = [0, 0, 0]
+        self.light_measurements = [0, 0, 0]
         self.last_simulated_encoder_R = 0
         self.last_simulated_encoder_L = 0
+
+        """
+        routes are encoded as an array of turns to perform at each intersection,
+        the options for each element are:
+            1 to turn to the right
+            0 to keep going straight
+            -1 to turn to the left
+        """
+        self.route = []
+        self.curr_step = 0
 
         self.Kpho = 0.05 / self.wheel_radius
         self.Kalpha = 0.1 / self.wheel_radius
@@ -77,8 +88,9 @@ class E160_robot:
     def update(self, deltaT):
 
         # get sensor measurements
-        self.encoder_measurements, self.range_measurements = self.update_sensor_measurements(
-            deltaT)
+        self.encoder_measurements,\
+        self.range_measurements,\
+        self.light_measurements = self.update_sensor_measurements(deltaT)
 
         # localize
         self.state_est = self.localize(
@@ -105,13 +117,33 @@ class E160_robot:
             data = [int(x) for x in data]
             encoder_measurements = data[-2:]
             range_measurements = data[:-2]
+            # TODO: get light sensor measurements from hardware
 
         elif self.environment.robot_mode == "SIMULATION MODE":
             encoder_measurements = self.simulate_encoders(
                 self.R, self.L, deltaT)
             range_measurements = [0, 0, 0]
+            light_measurements = self.update_light_sensors()
 
-        return encoder_measurements, range_measurements
+        return encoder_measurements, range_measurements, light_measurements
+
+    def update_light_sensors(self):
+        sensor_offsets = [(0.05, 0), (0, 0.05), (0, -0.05)]
+        measurements = [0,0,0]
+        for i in range(len(sensor_offsets)):
+            x = self.state_est.x + sensor_offsets[i][0] * math.cos(self.state_est.theta)
+            y = self.state_est.y + sensor_offsets[i][1] * math.sin(self.state_est.theta)      
+            for wall in self.environment.walls:
+                if self.is_point_over_wall(wall, x, y):
+                    measurements[i] = 1
+                    break
+                else:
+                    measurements[i] = 0
+    
+    def is_point_over_wall(self, wall, x, y):
+        between_x = wall.points[0] <= x <= wall.points[2]
+        between_y = wall.points[1] <= y <= wall.points[3]
+        return between_x and between_y
 
     def localize(self, state_est, encoder_measurements, range_measurements):
         delta_s, delta_theta = self.update_odometry(encoder_measurements)
@@ -150,6 +182,9 @@ class E160_robot:
                     self.Kbeta = p[6] / self.wheel_radius
                 self.whichPoint += 1
                 self.point_tracked = False
+
+        elif self.environment.control_mode == "LINE FOLLOW MODE":
+            desiredWheelSpeedR, desiredWheelSpeedL = self.line_follow_control()
 
         return desiredWheelSpeedR, desiredWheelSpeedL
 
@@ -350,3 +385,22 @@ class E160_robot:
 
         # keep this to return the updated state
         return state
+
+    def line_follow_control(self):
+        if self.veered_off_line():
+            pass # correct robot orientation
+        if self.is_at_intersection():
+            desiredWheelSpeedR, desiredWheelSpeedL = (0, 0)
+            # execute self.route[self.curr_step], increment curr_step
+        else:
+            desiredWheelSpeedR, desiredWheelSpeedL = (50, 50) # follow line
+
+        return desiredWheelSpeedR, desiredWheelSpeedL
+
+    def is_at_intersection(self):
+        return False
+        # return self.line() or self.right_line()
+
+    def veered_off_line(self):
+        return False
+

@@ -155,7 +155,7 @@ class E160_graphics:
 
         
     def track_point(self):
-        self.environment.control_mode = "PATH TRACKER"#"AUTONOMOUS CONTROL MODE"
+        self.environment.control_mode = "LINE FOLLOW MODE"#"AUTONOMOUS CONTROL MODE"
 
         # update sliders on gui
         self.forward_control.set(0)
