@@ -1,22 +1,71 @@
 import networkx as nx
 import math
+from Node import *
+import matplotlib.pyplot as plt
+
+# Takes in an array of lines and returns a networkx graph with nodes at the
+# intersection points and edges with attribute 'length' equal to the distances
+# between neighboring
+def graphFromLines(lines):
+    intersects = findAllIntersects(lines)
+
+    G = nx.Graph()
+
+    for line in lines:
+        inters = intersects[str(line)]
+
+        end1 = Node(line[0], line[1], str(line[0:2]))
+        end2 = Node(line[2], line[3], str(line[2:]))
+
+        # Add the line end points to the graph if they aren't already there
+        if end1 not in G:
+            G.add_node(end1)
+        if end2 not in G:
+            G.add_node(end2)
+
+        # Add all of the intersections on this line to the graph if they
+        # aren't already there
+        for i in range(len(inters)):
+            inter = inters[i]
+
+            node = Node(inter[0], inter[1], str(inter))
+
+            if node not in G:
+                G.add_node(node)
+
+            # Link the intersections to their neighbors with edges
+            if i == 0:
+                G.add_edge(end1, node, length=distance(end1, node))
+            else:
+                oldInt = inters[i-1]
+                neighbor = Node(oldInt[0], oldInt[1], str(oldInt))
+
+                G.add_edge(neighbor, node, length=distance(neighbor, node))
+
+            if i == len(inters) - 1:
+                G.add_edge(end2, node, length=distance(end2, node))
+
+            pass
+
+    return G
+
 
 # Takes in an array of lines and returns a dictionary of the intersections
 # that exist on each line.  A particular intersection will be located on both
 # lines that intersect in the dictionary.  All of the intersections on a line
 # will be sorted from closest to the first endpoint to farthest from the first
-# endpoint
+# endpoint.
 def findAllIntersects(lines):
     intersects = {}
 
     for line1 in lines:
         for line2 in lines:
             if line1 != line2:
-                int = findIntersect(line1, line2)
+                inter = findIntersect(line1, line2)
 
-                if int != [float('inf'), float('inf')]:
+                if inter != [float('inf'), float('inf')]:
                     # Sort the intersections properly
-                    points = [int]
+                    points = [inter]
                     if str(line1) in intersects:
                         points += intersects[str(line1)]
 
@@ -95,9 +144,29 @@ def findIntersect(line1, line2):
     # Check if the intercept is on the segments
     if (xl1 <= x_int <= xr1) and (xl2 <= x_int <= xr2):
         if (yb1 <= y_int <= yt1) and (yb2 <= y_int <= yt2):
+            x_int = int(x_int)
+            y_int = int(y_int)
             return [x_int, y_int]
 
     return [float('inf'), float('inf')]
+
+# Visualize a given graph
+def drawGraph(G):
+
+    options = {'node_color': 'red',
+                'node_size': 100,
+                'width': 3,
+                'with_labels': True}
+
+    plt.figure(6)
+    nx.draw_kamada_kawai(G, **options)
+    plt.title('kk')
+
+    plt.show()
+
+# Calculate the distance between two nodes
+def distance(nodeA, nodeB):
+    return ((nodeA.x-nodeB.x)**2 + (nodeA.y-nodeB.y)**2)**0.5
 
 if __name__ == '__main__':
     print('*'*30, 'Test findIntersect', '*'*30)
@@ -120,19 +189,24 @@ if __name__ == '__main__':
     real = True
 
     # Check if it found all of the intersections
-    for int in expInts:
-        all = (int in foundInts) and all
+    for inter in expInts:
+        all = (inter in foundInts) and all
 
-        if int not in foundInts:
+        if inter not in foundInts:
             print('Did not find', int)
 
     # Check if it only found expected intersections
-    for int in foundInts:
-        real = (int in expInts) and real
+    for inter in foundInts:
+        real = (inter in expInts) and real
 
-        if int not in expInts:
+        if inter not in expInts:
             print('Oddly, found', int)
 
     print('Found all intersections:      ', all)
     print('Only found real intersections:', real)
     print(findAllIntersects(lines))
+
+    print('*'*28, 'Test createGraph', '*'*28)
+    print('\nSee plot')
+    G = graphFromLines(lines)
+    drawGraph(G)
