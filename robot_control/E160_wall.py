@@ -6,6 +6,7 @@ class E160_wall:
         # set up walls
         self.slope = slope
         self.radius = 0.025
+        self.simple_points = wall_points
         
         # assume top point is first
         if slope == "vertical":

@@ -122,31 +122,33 @@ class E160_robot:
             encoder_measurements = self.simulate_encoders(
                 self.R, self.L, deltaT)
             range_measurements = [0, 0, 0]
-            light_measurements = self.update_light_sensors()
+            light_measurements = self.simulate_light_sensors()
 
         return encoder_measurements, range_measurements, light_measurements
 
-    def update_light_sensors(self):
+    def simulate_light_sensors(self):
         sensor_offsets = [(0, -0.06), (0, -0.03), (0, 0), (0, 0.03), (0, 0.06)]
         measurements = [0,0,0,0,0]
         for i in range(len(sensor_offsets)):
             x = self.state_est.x + sensor_offsets[i][0] * math.cos(self.state_est.theta) \
                                  + sensor_offsets[i][1] * math.sin(self.state_est.theta)
             y = self.state_est.y - sensor_offsets[i][0] * math.sin(self.state_est.theta) \
-                                 + sensor_offsets[i][1] * math.cos(self.state_est.theta)
-            print(i,x,y)                  
+                                 + sensor_offsets[i][1] * math.cos(self.state_est.theta)             
             for wall in self.environment.walls:
                 if self.is_point_over_wall(wall, x, y):
                     measurements[i] = 1
                     break
                 else:
-                    measurements[i] = 0
-        print(measurements)                            
+                    measurements[i] = 0                        
         return measurements
     
     def is_point_over_wall(self, wall, x, y):
-        between_x = wall.points[0] <= x <= wall.points[2]
-        between_y = wall.points[-1] <= y <= wall.points[1]           
+        if wall.slope == 'horizontal':
+            between_x = wall.points[0] <= x <= wall.points[-2]
+            between_y = wall.points[1] <= y <= wall.points[3]
+        elif wall.slope == 'vertical':  
+            between_x = wall.points[0] <= x <= wall.points[2]
+            between_y = wall.points[-1] <= y <= wall.points[1]                                 
         return between_x and between_y
 
     def localize(self, state_est, encoder_measurements, range_measurements):

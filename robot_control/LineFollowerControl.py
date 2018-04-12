@@ -40,10 +40,9 @@ class LineFollowerControl():
             return [None, None, None]
 
     def stay_on_line(self):
-        # TODO: tweak this control
         for i in range(len(self.sensor_readings)):
             if self.sensor_readings[i] == 1:
-                return (50 - (i-2) * 2, 50 + (i-2) * 2)
+                return (50 - (i-2) * 5, 50 + (i-2) * 5)
 
     def trigger_resolve(self):
         self.resolve_intersection == True
@@ -51,6 +50,8 @@ class LineFollowerControl():
     def update(self, sensor_readings):
         self.sensor_readings = sensor_readings
         self.line_state = self.interpret_sensor_readings()
+        print(self.sensor_readings)
+
 
         if self.line_state == [0, 1, 0]:
             desiredWheelSpeedR, desiredWheelSpeedL = self.stay_on_line()
