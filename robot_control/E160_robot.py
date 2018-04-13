@@ -4,6 +4,7 @@ import math
 import datetime
 from LineFollowerControl import LineFollowerControl
 
+
 class E160_robot:
 
     def __init__(self, environment, address, robot_id):
@@ -46,14 +47,17 @@ class E160_robot:
             0 to keep going straight
             -1 to turn to the left
         """
-        self.line_follow_control = LineFollowerControl([])
+        self.route = [1,-1]
+        self.route_step = 1
+        self.at_intersection = False
 
-        self.Kpho = 0.05 / self.wheel_radius
-        self.Kalpha = 0.1 / self.wheel_radius
-        self.Kbeta = -0.01 / self.wheel_radius
+        self.Kpho = 1.5 / self.wheel_radius
+        self.Kalpha = 6 / self.wheel_radius
+        self.Kbeta = -1.45 / self.wheel_radius
         # self.Kpho = 1.5
         # self.Kalpha = 4
         # self.Kbeta = -1.04
+
         self.max_velocity = 0.05
         self.point_tracked = True
         self.encoder_per_sec_to_rad_per_sec = 10
@@ -88,8 +92,8 @@ class E160_robot:
 
         # get sensor measurements
         self.encoder_measurements,\
-        self.range_measurements,\
-        self.light_measurements = self.update_sensor_measurements(deltaT)
+            self.range_measurements,\
+            self.light_measurements = self.update_sensor_measurements(deltaT)
 
         # localize
         self.state_est = self.localize(
@@ -128,27 +132,28 @@ class E160_robot:
 
     def simulate_light_sensors(self):
         sensor_offsets = [(0, -0.06), (0, -0.03), (0, 0), (0, 0.03), (0, 0.06)]
-        measurements = [0,0,0,0,0]
+        measurements = [0, 0, 0, 0, 0]
         for i in range(len(sensor_offsets)):
             x = self.state_est.x + sensor_offsets[i][0] * math.cos(self.state_est.theta) \
-                                 + sensor_offsets[i][1] * math.sin(self.state_est.theta)
-            y = self.state_est.y - sensor_offsets[i][0] * math.sin(self.state_est.theta) \
-                                 + sensor_offsets[i][1] * math.cos(self.state_est.theta)             
+                - sensor_offsets[i][1] * math.sin(self.state_est.theta)
+            y = self.state_est.y + sensor_offsets[i][0] * math.sin(self.state_est.theta) \
+                                 + sensor_offsets[i][1] * \
+                math.cos(self.state_est.theta)
             for wall in self.environment.walls:
                 if self.is_point_over_wall(wall, x, y):
                     measurements[i] = 1
                     break
                 else:
-                    measurements[i] = 0                        
+                    measurements[i] = 0
         return measurements
-    
+
     def is_point_over_wall(self, wall, x, y):
         if wall.slope == 'horizontal':
             between_x = wall.points[0] <= x <= wall.points[-2]
             between_y = wall.points[1] <= y <= wall.points[3]
-        elif wall.slope == 'vertical':  
+        elif wall.slope == 'vertical':
             between_x = wall.points[0] <= x <= wall.points[2]
-            between_y = wall.points[-1] <= y <= wall.points[1]                                 
+            between_y = wall.points[-1] <= y <= wall.points[1]
         return between_x and between_y
 
     def localize(self, state_est, encoder_measurements, range_measurements):
@@ -190,9 +195,36 @@ class E160_robot:
                 self.point_tracked = False
 
         elif self.environment.control_mode == "LINE FOLLOW MODE":
-            desiredWheelSpeedR, desiredWheelSpeedL = self.line_follow_control.update(self.light_measurements)
+            if not self.point_tracked:
+                desiredWheelSpeedR, desiredWheelSpeedL = self.point_tracker_control()
+            else:
+                desiredWheelSpeedR, desiredWheelSpeedL = self.line_follow_control()
 
         return desiredWheelSpeedR, desiredWheelSpeedL
+
+    def line_follow_control(self):
+        if sum(self.light_measurements) >= 3: # Intersection
+            target_t = 0 - sum(self.route[:self.route_step]) * math.pi/2
+            self.state_des.set_state(
+                self.state_est.x - 0.1 * math.cos(target_t), 
+                self.state_est.y - 0.1 * math.sin(target_t), 
+                target_t
+            )
+            self.route_step += 1
+            self.point_tracked = False
+            return 0, 0
+        
+        if sum(self.light_measurements) == 0: # No line
+            return 0, 0
+
+        # Follow the line:
+        left = 50
+        right = 50
+        for i in range(len(self.light_measurements)):
+            if self.light_measurements[i] == 1:
+                left -= (i-2) * 2
+                right += (i-2) * 2
+        return left, right
 
     def point_tracker_control(self):
 
@@ -391,4 +423,3 @@ class E160_robot:
 
         # keep this to return the updated state
         return state
-

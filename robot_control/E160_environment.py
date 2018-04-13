@@ -14,8 +14,9 @@ class E160_environment:
 
         # set up walls, putting top left point first
         self.walls = []
-        self.walls.append(E160_wall([-0.5, 0, 0.5, 0], "horizontal"))
-        self.walls.append(E160_wall([-0.5, 0.5, -0.5, 0], "vertical"))
+        self.walls.append(E160_wall([-0.2, 0, 0.5, 0], "horizontal"))
+        self.walls.append(E160_wall([-0.2, 0.3, -0.2, 0], "vertical"))
+        self.walls.append(E160_wall([-0.5, 0.3, 0.5, 0.3], "horizontal"))        
         
         # self.walls.append(E160_wall([0.5, 0.5, 0.5, -0.5], "vertical"))
         # self.walls.append(E160_wall([-0.5, 0.5, 0.5, 0.5], "horizontal"))
