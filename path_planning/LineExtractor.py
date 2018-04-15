@@ -20,7 +20,7 @@ def main(argv):
         print ('Usage: hough_lines.py [image_name -- default ' + default_file + '] \n')
         return -1
     
-    dst = cv.Canny(src, 50, 200, None, 3)
+    ret,dst = cv.threshold(src,127,255,cv.THRESH_BINARY_INV)
     
     # Copy edges to the images that will display the results in BGR
     cdst = cv.cvtColor(dst, cv.COLOR_GRAY2BGR)
@@ -41,7 +41,7 @@ def main(argv):
             cv.line(cdst, pt1, pt2, (0,0,255), 3, cv.LINE_AA)
     
     
-    linesP = cv.HoughLinesP(dst, 1, np.pi / 180, 50, None, 100, 50)
+    linesP = cv.HoughLinesP(dst, 30, np.pi / 180, 50, None, 10, 5)
     
     if linesP is not None:
         for i in range(0, len(linesP)):
