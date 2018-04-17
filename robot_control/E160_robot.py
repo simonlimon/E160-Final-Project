@@ -10,9 +10,9 @@ class E160_robot:
     def __init__(self, environment, address, robot_id):
         self.environment = environment
         self.state_est = E160_state()
-        self.state_est.set_state(0, 0, 0)
+        self.state_est.set_state(1.5, -1.4, -1.57)
         self.state_des = E160_state()
-        self.state_des.set_state(0, 0, 0)
+        self.state_des.set_state(1.5, -1.4, -1.57)
         #self.v = 0.05
         #self.w = 0.1
         self.R = 0
@@ -195,31 +195,43 @@ class E160_robot:
                 self.point_tracked = False
 
         elif self.environment.control_mode == "LINE FOLLOW MODE":
-            if not self.point_tracked:
-                desiredWheelSpeedR, desiredWheelSpeedL = self.point_tracker_control()
-            else:
                 desiredWheelSpeedR, desiredWheelSpeedL = self.line_follow_control()
 
         return desiredWheelSpeedR, desiredWheelSpeedL
 
     def line_follow_control(self):
-        if sum(self.light_measurements) >= 3: # Intersection
+        if not self.point_tracked:
+            return self.point_tracker_control()
+
+        elif sum(self.light_measurements) >= 3: # Intersection
             target_t = 0 - sum(self.route[:self.route_step]) * math.pi/2
+
             self.state_des.set_state(
-                self.state_est.x - 0.1 * math.cos(target_t), 
-                self.state_est.y - 0.1 * math.sin(target_t), 
+                #self.state_est.x - 0.1 * math.cos(target_t),
+                #self.state_est.y - 0.1 * math.sin(target_t),
+                self.state_est.x,
+                self.state_est.y,
                 target_t
             )
-            self.route_step += 1
-            self.point_tracked = False
-            return 0, 0
-        
-        if sum(self.light_measurements) == 0: # No line
+
+            # If we aren't facing the right way, rotate to the right way
+            if abs(self.angle_wrap(self.state_des.theta - self.state_est.theta)) > 0.1:
+
+                self.point_tracked = False
+                return 0, 0
+            # Otherwise we have completed this step in the route and we should
+            # move on
+            else:
+                self.route_step += 1
+
+        elif sum(self.light_measurements) == 0: # No line
             return 0, 0
 
         # Follow the line:
         left = 50
         right = 50
+
+        # Apply a discrete P control
         for i in range(len(self.light_measurements)):
             if self.light_measurements[i] == 1:
                 left -= (i-2) * 2

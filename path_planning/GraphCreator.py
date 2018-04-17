@@ -2,6 +2,22 @@ import networkx as nx
 import math
 from Node import *
 import matplotlib.pyplot as plt
+import motionPlanning as mp
+import E160_Wall
+
+def directions(walls, start, end, isAStar):
+    wallLines = [x.simple_points for x in self.walls]
+    G = graphFromLines(wallLines)
+
+    startNode = Node(start[0], start[1], str(start))
+    endNode = Node(end[0], end[1], str(end))
+    breadthPath = mp.breadthFirstPath(G, startNode, endNode)
+    aPath = mp.aStarPath(G, startNode, endNode)
+
+    if isAStar:
+        return pathToDirections(aPath)
+    else:
+        return pathToDirections(breadthPath)
 
 # Takes in an array of lines and returns a networkx graph with nodes at the
 # intersection points and edges with attribute 'length' equal to the distances
@@ -180,7 +196,7 @@ if __name__ == '__main__':
     print(' ')
 
     print('*'*28, 'Test findAllIntersects', '*'*28)
-    lines = [[7,10,7,1], [0,0,10,0], [2,2,2,-2], [2,1,7,1], [8,0,10,2],\
+    lines = [[7,10,7,0], [0,0,10,0], [2,2,2,-2], [2,1,7,1],\
             [7,6,15,6], [7,4,15,4], [10,2,10,0], [10,1,15,1] ,[15,6,15,-2]]
     expInts = [[2,0], [8,0], [10,0], [10,2], [10,1], [15,1], [2,1], [7,1],\
             [7,4], [7,6], [15,6], [15,4]]
@@ -209,4 +225,20 @@ if __name__ == '__main__':
     print('*'*28, 'Test createGraph', '*'*28)
     print('\nSee plot')
     G = graphFromLines(lines)
+
+    print('*'*28, 'Test motion planning', '*'*28)
+    startNode = Node(15, -2, str(lines[8][2:4]))
+    endNode = Node(2, 1, str(lines[3][0:2]))
+    breadthPath = mp.breadthFirstPath(G, startNode, endNode)
+    aPath = mp.aStarPath(G, startNode, endNode)
+    print('Breadth path: ', breadthPath)
+    print('A* path: ', aPath)
+
+
+    print('\nBreadth Distance: ', mp.pathDistance(breadthPath))
+    print('A* Distance: ', mp.pathDistance(aPath))
+
+    print('\nBreadth Directions: ', mp.pathToDirections(breadthPath))
+    print('A* Directions: ', mp.pathToDirections(aPath))
+
     drawGraph(G)

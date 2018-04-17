@@ -83,7 +83,7 @@ def drawMaze(G):
 # Uses breadth first search starting at the start node to find the quickest
 # path to the end node.  Returns a list with the nodes that must be visited in
 # order from start to finish. Crashes if the endNode does not exist in G.
-def breadthFirstDirections(G, startNode, endNode):
+def breadthFirstPath(G, startNode, endNode):
     pathsDict = {startNode: [startNode]}
     isFound = False
 
@@ -106,7 +106,7 @@ def breadthFirstDirections(G, startNode, endNode):
     return pathsDict[endNode]
 
 # Find the shortest path with A*
-def aStarDirections(G, startNode, endNode):
+def aStarPath(G, startNode, endNode):
 
     return nx.astar_path(G, startNode, endNode, heuristic=distance, weight='length')
 
@@ -123,20 +123,96 @@ def pathDistance(path):
 
     return dist
 
+# Turn the given path into a list of directions
+# 1 means turn right
+# 0 means go straight
+# -1 means go left
+def pathToDirections(path):
+    directions = []
+
+    # Assumes that the initial direction is positive Y and that is the correct
+    # direction to get to the next node
+    for i in range(1,len(path)-1):
+        # Compare the direction from this node to the next node with the
+        # direction from the last node to this node to determine which way to
+        # turn
+        # Assumes that all lines are roughly vertical or horizontal
+        dy = path[i+1].y - path[i].y
+        dx = path[i+1].x - path[i].x
+
+        isHorizontal = False
+        isPositive = False
+
+        # Check if it is horizontal
+        if math.isclose(max(abs(dx), abs(dy)), abs(dx), abs_tol=0.00001):
+            isHorizontal = True
+
+            if dx > 0:
+                isPositive = True
+
+        elif dy > 0:
+            isPositive = True
+
+        # Check for the last traversal
+        dyOld = path[i].y - path[i-1].y
+        dxOld = path[i].x - path[i-1].x
+
+        isOldHorizontal = False
+        isOldPositive = False
+
+        # Check if it is horizontal
+        if math.isclose(max(abs(dxOld), abs(dyOld)), abs(dxOld), abs_tol=0.00001):
+            isOldHorizontal = True
+
+            if dxOld > 0:
+                isOldPositive = True
+
+        elif dyOld > 0:
+            isOldPositive = True
+
+        # Determine the direction to turn
+        if isHorizontal ^ isOldHorizontal:
+            # Was going in the +X or -Y direction
+            if not (isOldHorizontal ^ isOldPositive):
+                # Will go in the +Y or +X direction
+                if isPositive:
+                    directions += [-1]
+                # Will go in the -Y or -X direction
+                else:
+                    directions += [1]
+
+            # Was going in the -X or +Y direction
+            elif isOldHorizontal ^ isOldPositive:
+                # Will go in the +Y or +X direction
+                if isPositive:
+                    directions += [1]
+                # Will go in the -Y or -X direction
+                else:
+                    directions += [-1]
+
+        # If both edges are horizontal or both are vertical then go straight
+        # through the node
+        else:
+            directions += [0]
+
+    return directions
+
 def main():
     global numNodes
     numNodes = 50
 
     G = randGraphMaze(numNodes, True)
-    breadthPath = breadthFirstDirections(G, startNode, endNode)
-    aStarPath = aStarDirections(G, startNode, endNode)
+    breadthPath = breadthFirstPath(G, startNode, endNode)
+    aPath = aStarPath(G, startNode, endNode)
     print('Breadth path: ', breadthPath)
-    print('A* path: ', aStarPath)
+    print('A* path: ', aPath)
 
 
+    print('\nBreadth Distance: ', pathDistance(breadthPath))
+    print('A* Distance: ', pathDistance(aPath))
 
-    print('\n Breadth Distance: ', pathDistance(breadthPath))
-    print('A* Distance: ', pathDistance(aStarPath))
+    print('\nBreadth Directions: ', pathToDirections(breadthPath))
+    print('A* Directions: ', pathToDirections(aPath))
 
     drawMaze(G)
 
