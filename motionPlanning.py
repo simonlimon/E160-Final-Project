@@ -1,12 +1,13 @@
 import networkx as nx
 import math
-#import random
+import random
 #import matplotlib.pyplot as plt
 from Node import *
 
 startNode = Node(0, 0, 0)
 endNode = Node(0, 0, 0)
 numNodes = 0
+numExpanded = 0
 
 # Create a random maze with the given number of nodes for testing.  It is
 # guaranteed to be connected. And the maximum number of nodes that a node can
@@ -20,12 +21,15 @@ def randGraphMaze(numNodes, hasLoops):
     maxX = 1000
     maxY = 1000
 
+    newNode = Node(0,0,0)
+
     for i in range(numNodes):
 
         # Put the new node at a random place on the grid
-        newX = (random.random() * maxX * 2) - maxX
-        newY = (random.random() * maxY * 2) - maxY
-        newNode = Node(newX, newY, i)
+        direction = ['vertical', 'horizontal']
+
+        newX = 0
+        newY = 0
 
         # Connect the node to the network appropriately
         if i > 0:
@@ -34,11 +38,25 @@ def randGraphMaze(numNodes, hasLoops):
 
                 if len(list(G.neighbors(candidate))) < 4:
 
+                    if random.choice(direction) == 'vertical':
+                        newX = candidate.x
+                        newY = (random.random() * maxY * 2) - maxY
+                    else:
+                        newX = (random.random() * maxY * 2) - maxY
+                        newY = candidate.y
+
+                    newNode = Node(newX, newY, i)
+
                     G.add_node(newNode)
                     G.add_edge(candidate, newNode, length=distance(candidate, newNode))
 
                     break
         else:
+            newX = (random.random() * maxY * 2) - maxY
+            newY = (random.random() * maxY * 2) - maxY
+
+            newNode = Node(newX, newY, i)
+
             G.add_node(newNode)
 
         if i == 0:
@@ -64,7 +82,7 @@ def randGraphMaze(numNodes, hasLoops):
                 if len(list(G.neighbors(node1))) < 4 and len(list(G.neighbors(node2))) < 4:
                     G.add_edge(node1, node2)
                     break
-    return G
+    return G, startNode, endNode
 
 # Visualize a given graph
 def drawMaze(G):
@@ -84,6 +102,9 @@ def drawMaze(G):
 # path to the end node.  Returns a list with the nodes that must be visited in
 # order from start to finish. Crashes if the endNode does not exist in G.
 def breadthFirstPath(G, startNode, endNode):
+    global numExpanded
+    numExpanded = 0
+
     pathsDict = {startNode: [startNode]}
     isFound = False
 
@@ -92,36 +113,40 @@ def breadthFirstPath(G, startNode, endNode):
 
     iter = nx.bfs_successors(G, startNode)
     current = next(iter)
+    numExpanded += 1
 
     # iterate through the graph, remembering the path to get to each node
     while(not isFound):
         for node in current[1]:
             pathsDict[node] = pathsDict[current[0]] + [node]
+            numExpanded += 1
 
         if endNode in current[1]:
             isFound = True
         else:
             current = next(iter)
 
-    return pathsDict[endNode]
+
+    return pathsDict[endNode], numExpanded
 
 # Find the shortest path with A*
 def aStarPath(G, startNode, endNode):
+    global numExpanded
+    numExpanded = 0
 
-    return nx.astar_path(G, startNode, endNode, heuristic=distance, weight='length')
+    return nx.astar_path(G, startNode, endNode, distance, 'length'), numExpanded
 
 # Calculate the distance between two nodes
 def distance(nodeA, nodeB):
+    global numExpanded
+    numExpanded += 1
+
     return ((nodeA.x-nodeB.x)**2 + (nodeA.y-nodeB.y)**2)**0.5
 
 # Calculate the total distance traveled for a path
-def pathDistance(path):
-    dist = 0
+def pathDistance(G, path):
 
-    for i in range(1, len(path)):
-        dist += distance(path[i-1], path[i])
-
-    return dist
+    return sum(G[u][v].get('length', 1) for u, v in zip(path[:-1], path[1:]))
 
 # Turn the given path into a list of directions
 # 1 means turn right
@@ -196,6 +221,8 @@ def pathToDirections(path):
             directions += [0]
 
     return directions
+
+
 
 def main():
     global numNodes
