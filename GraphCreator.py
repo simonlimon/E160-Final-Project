@@ -1,5 +1,6 @@
 import networkx as nx
 import math
+#import time
 from Node import *
 import matplotlib.pyplot as plt
 from motionPlanning import *
@@ -183,22 +184,28 @@ def drawGraph(G):
 # same for each algorithm on the same graph, but are randomly selected when the
 # graphs are generated
 def statistics():
-    numGraphs = 1000
+    numGraphs = 50
 
     breadthDists = [float('inf')]*numGraphs
     aStarDists = [float('inf')]*numGraphs
     breadthNodes = [float('inf')]*numGraphs
     aStarNodes = [float('inf')]*numGraphs
+    breadthTimes = [float('inf')]*numGraphs
+    aStarTimes = [float('inf')]*numGraphs
 
     for i in range(numGraphs):
-        G, startNode, endNode = randGraphMaze(1000, True)
+        print(i)
+        G, startNode, endNode = randGraphMaze(10000, True)
 
+        startTime = time.time()
         breadthPath, breadthNodes[i] = breadthFirstPath(G, startNode, endNode)
+        breadthTimes[i] = time.time()-startTime
         breadthDist = pathDistance(G, breadthPath)
 
+        startTime = time.time()
         aPath, aStarNodes[i] = aStarPath(G, startNode, endNode)
+        aStarTimes[i] = time.time()-startTime
         aStarDist = pathDistance(G, aPath)
-        aStarWeights = sum(G[u][v].get('length', 1) for u, v in zip(aPath[:-1], aPath[1:]))
 
         breadthDists[i] = breadthDist
         aStarDists[i] = aStarDist
@@ -208,8 +215,10 @@ def statistics():
     avAStarDist = sum(aStarDists)/len(aStarDists)
     avBreadthNodes = sum(breadthNodes)/len(breadthNodes)
     avAStarNodes = sum(aStarNodes)/len(aStarNodes)
+    avBreadthTime = sum(breadthTimes)/len(breadthTimes)
+    avAStarTime = sum(aStarTimes)/len(aStarTimes)
 
-    return avBreadthDist, avAStarDist, avBreadthNodes, avAStarNodes
+    return avBreadthDist, avAStarDist, avBreadthNodes, avAStarNodes, avBreadthTime, avAStarTime
 
 
 # Calculate the distance between two nodes
@@ -275,9 +284,10 @@ if __name__ == '__main__':
 
     print('*'*28, 'Search Statistics', '*'*28)
 
-    avBreadthDist, avAStarDist, avBreadthNodes, avAStarNodes = statistics()
+    avBreadthDist, avAStarDist, avBreadthNodes, avAStarNodes, avBreadthTime, avAStarTime = statistics()
 
     print('Average distance for BFS vs aStar:', avBreadthDist, 'vs.', avAStarDist)
     print('Average number of nodes checked for BFS vs aStar:', avBreadthNodes, 'vs.', avAStarNodes)
+    print('Average time taken for BFS vs aStar:', avBreadthTime, 'vs.', avAStarTime)
 
     drawGraph(G)
