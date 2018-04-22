@@ -5,77 +5,54 @@ https://docs.opencv.org/3.4.0/d9/db0/tutorial_hough_lines.html
 """
 import sys
 import math
-import cv2 as cv
 import numpy as np
+
+from skimage import io
+from skimage.util import invert
+from skimage.filters import threshold_otsu
+from skimage.transform import probabilistic_hough_line
+from skimage.morphology import skeletonize_3d
+
+import matplotlib.pyplot as plt
+from matplotlib import cm
 
 def main(argv):
     
-    default_file =  "../../../../data/sudoku.png"
-    filename = argv[0] if len(argv) > 0 else default_file
     # Loads an image
-    src = cv.imread(filename, cv.IMREAD_GRAYSCALE)
-    # Check if image is loaded fine
-    if src is None:
-        print ('Error opening image!')
-        print ('Usage: hough_lines.py [image_name -- default ' + default_file + '] \n')
-        return -1
+    image = io.imread(argv[0], True)
     
-    ret,dst = cv.threshold(src,127,255,cv.THRESH_BINARY_INV)
+    binary = image > threshold_otsu(image)
+    skel = skeletonize_3d(invert(binary))
     
     # Copy edges to the images that will display the results in BGR
-    cdst = cv.cvtColor(dst, cv.COLOR_GRAY2BGR)
-    cdstP = np.copy(cdst)
-    
-    lines = cv.HoughLines(dst, 1, np.pi / 180, 150, None, 0, 0)
-    
-    if lines is not None:
-        for i in range(0, len(lines)):
-            rho = lines[i][0][0]
-            theta = lines[i][0][1]
-            a = math.cos(theta)
-            b = math.sin(theta)
-            x0 = a * rho
-            y0 = b * rho
-            pt1 = (int(x0 + 1000*(-b)), int(y0 + 1000*(a)))
-            pt2 = (int(x0 - 1000*(-b)), int(y0 - 1000*(a)))
-            cv.line(cdst, pt1, pt2, (0,0,255), 3, cv.LINE_AA)
-    
-    
-    linesP = cv.HoughLinesP(dst, 30, np.pi / 180, 50, None, 10, 5)
-    
-    if linesP is not None:
-        for i in range(0, len(linesP)):
-            l = linesP[i][0]
-            cv.line(cdstP, (l[0], l[1]), (l[2], l[3]), (0,0,255), 3, cv.LINE_AA)
-    
-    cv.imshow("Source", dst)
-    cv.imshow("Detected Lines (in red) - Standard Hough Line Transform", cdst)
-    cv.imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP)
-    
-    cv.waitKey()
-    return 0
+    lines = probabilistic_hough_line(skel, threshold=5, line_length=20,
+                                 line_gap=50)
 
-def skeletonize(img):
-    """ OpenCV function to return a skeletonized version of img, a Mat object"""
+    plot(image, skel, lines)
 
-    #  hat tip to http://felix.abecassis.me/2011/09/opencv-morphological-skeleton/
+def plot(raw, processed, lines):
+    fig, axes = plt.subplots(1, 3, figsize=(20, 6), sharex=True, sharey=True)
+    ax = axes.ravel()
 
-    img = img.copy() # don't clobber original
-    skel = img.copy()
+    ax[0].imshow(raw, cmap=cm.gray)
+    ax[0].set_title('Input image')
 
-    skel[:,:] = 0
-    kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3))
+    ax[1].imshow(processed, cmap=cm.gray)
+    ax[1].set_title('Processed image')
 
-    while True:
-        eroded = cv2.morphologyEx(img, cv2.MORPH_ERODE, kernel)
-        temp = cv2.morphologyEx(eroded, cv2.MORPH_DILATE, kernel)
-        temp  = cv2.subtract(img, temp)
-        skel = cv2.bitwise_or(skel, temp)
-        img[:,:] = eroded[:,:]
-        if cv2.countNonZero(img) == 0:
-            break
+    ax[2].imshow(processed * 0)
+    for line in lines:
+        p0, p1 = line
+        ax[2].plot((p0[0], p1[0]), (p0[1], p1[1]))
+    ax[2].set_xlim((0, raw.shape[1]))
+    ax[2].set_ylim((raw.shape[0], 0))
+    ax[2].set_title('Probabilistic Hough')
 
-    return skel
+    for a in ax:
+        a.set_axis_off()
+
+    plt.tight_layout()
+    plt.show()
     
 if __name__ == "__main__":
     main(sys.argv[1:])
