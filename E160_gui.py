@@ -1,17 +1,15 @@
-
-
 import random
 import time
 from E160_environment import *
 from E160_graphics import *
 
-def main():
+def gui_main(directions = None):
 
     # instantiate robot navigation classes
     environment = E160_environment()
     graphics = E160_graphics(environment)
 
-    environment.plan_path()
+    environment.plan_path(directions)
 
     # set time step size in seconds
     deltaT = 0.1
@@ -30,4 +28,6 @@ def main():
         # maintain timing
         time.sleep(deltaT)
 
-main()
+if __name__ == '__main__':
+    gui_main()
+

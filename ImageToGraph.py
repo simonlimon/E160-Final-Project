@@ -4,6 +4,8 @@ https://docs.opencv.org/3.4.0/d7/d4d/tutorial_py_thresholding.html
 import sys
 import math
 import numpy as np
+import matplotlib
+matplotlib.use("TkAgg")
 from matplotlib import pyplot as plt
 from Node import Node
 import networkx as nx
@@ -13,20 +15,38 @@ from skimage.util import invert
 from skimage.transform import rescale
 from skimage import io
 
-
 def main(argv):
 
     img = prepare_img(argv[0])
     G = build_graph(img)
 
+    select_start_end(G, img)
+
+def select_start_end(G, img):
+    print('Click to select start and end nodes')    
+    endpoints = [None, None]
+
     pos = {}
     for n in G.nodes():
         pos[n] = (n.x, n.y)
-    
+
     fig, ax = plt.subplots()  
     ax.imshow(img, interpolation='nearest', cmap=plt.cm.gray)
-    nx.draw(G,pos=pos, node_shape='+', edge_color='b')        
+    nx.draw(G,pos=pos, node_shape='+', edge_color='b')     
+    cid = fig.canvas.mpl_connect('button_press_event', lambda event: on_click(event, G, endpoints))       
     plt.show()
+    return endpoints
+
+def on_click(event, G, endpoints):
+    n = find_node(G, event.xdata, event.ydata)
+    if n is None: return 
+    if endpoints[0] is None:
+        print('Start node: ' + str(n))
+        endpoints[0] = n
+    elif endpoints[1] is None:
+        print('End node: ' + str(n))        
+        endpoints[1] = n
+        plt.close()
 
 def show_point(img, x, y):
     fig, ax = plt.subplots()  
@@ -34,10 +54,14 @@ def show_point(img, x, y):
     ax.plot([x], [y], 'sr', markersize=10)    
     plt.show()
     
-def prepare_img(filename, resize = False):
+def prepare_img(filename, resize = True):
 
-    image = rescale(io.imread(filename, True), 1.0 / 5.0)
-        
+    if resize:
+        image = rescale(io.imread(filename, True), 1.0 / 5.0, mode='constant')
+    else: 
+        image = io.imread(filename, True)
+    
+    image = image[::-1]
     binary = image > threshold_otsu(image)
     skeleton = skeletonize(invert(binary))
     return skeleton
@@ -61,7 +85,7 @@ def find_start(img):
             if img[j][i] == True:
                 return j, i
 
-def cycle_match(G, x, y):
+def find_node(G, x, y):
     rng = 10
     for n in G.nodes():
         between_x = n.x - rng < x and x < n.x + rng
@@ -74,9 +98,9 @@ def traverse(G, img, box, parent_node):
     state = box.update()
     while(state == 'line'):
         state = box.update()
-        print(box.x, box.y, state)    
+        # print(box.x, box.y, state)    
     
-    c_node = cycle_match(G, box.x, box.y)
+    c_node = find_node(G, box.x, box.y)
     if c_node is not None:
         G.add_edge(parent_node, c_node, length=distance(c_node, parent_node))        
         return
