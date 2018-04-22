@@ -119,8 +119,21 @@ class E160_robot:
             data = update['rf_data'].decode().split(' ')[:-1]
             data = [int(x) for x in data]
             encoder_measurements = data[-2:]
-            range_measurements = data[:-2]
-            # TODO: get light sensor measurements from hardware
+            range_measurements = data[0]
+            light_measurements = data[1:-2]
+
+            print('light measurements:', light_measurements)
+
+            # TODO: Update threshold
+            thresh = 0
+
+            for i in range(len(light_measurements)):
+                if light_measurements[i] > thresh:
+                    light_measurements[i] = 1
+                else:
+                    light_measurements[i] = 0
+
+
 
         elif self.environment.robot_mode == "SIMULATION MODE":
             encoder_measurements = self.simulate_encoders(
