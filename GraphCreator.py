@@ -1,8 +1,8 @@
 import networkx as nx
 import math
-#import time
+import time
 from Node import *
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from motionPlanning import *
 #from E160_wall import *
 
@@ -198,12 +198,12 @@ def statistics():
         G, startNode, endNode = randGraphMaze(10000, True)
 
         startTime = time.time()
-        breadthPath, breadthNodes[i] = breadthFirstPath(G, startNode, endNode)
+        breadthPath, breadthNodes[i] = breadthFirstPathS(G, startNode, endNode)
         breadthTimes[i] = time.time()-startTime
         breadthDist = pathDistance(G, breadthPath)
 
         startTime = time.time()
-        aPath, aStarNodes[i] = aStarPath(G, startNode, endNode)
+        aPath, aStarNodes[i] = aStarPathS(G, startNode, endNode)
         aStarTimes[i] = time.time()-startTime
         aStarDist = pathDistance(G, aPath)
 
@@ -270,8 +270,8 @@ if __name__ == '__main__':
     print('*'*28, 'Test motion planning', '*'*28)
     sNode = Node(15, -2, str(lines[8][2:4]))
     eNode = Node(2, 1, str(lines[3][0:2]))
-    breadthPath, breadthNodes = breadthFirstPath(G, sNode, eNode)
-    aPath, aNodes = aStarPath(G, sNode, eNode)
+    breadthPath, breadthNodes = breadthFirstPathS(G, sNode, eNode)
+    aPath, aNodes = aStarPathS(G, sNode, eNode)
     print('Breadth path: ', breadthPath)
     print('A* path: ', aPath)
 

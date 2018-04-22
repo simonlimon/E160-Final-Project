@@ -127,10 +127,46 @@ def breadthFirstPath(G, startNode, endNode):
             current = next(iter)
 
 
-    return pathsDict[endNode], numExpanded
+    return pathsDict[endNode]
 
 # Find the shortest path with A*
 def aStarPath(G, startNode, endNode):
+    global numExpanded
+    numExpanded = 0
+
+    return nx.astar_path(G, startNode, endNode, distance, 'length')
+
+# Same as breadthFirstPath but returns the number of nodes expanded as well
+def breadthFirstPathS(G, startNode, endNode):
+    global numExpanded
+    numExpanded = 0
+
+    pathsDict = {startNode: [startNode]}
+    isFound = False
+
+    if endNode == startNode:
+        isFound = True
+
+    iter = nx.bfs_successors(G, startNode)
+    current = next(iter)
+    numExpanded += 1
+
+    # iterate through the graph, remembering the path to get to each node
+    while(not isFound):
+        for node in current[1]:
+            pathsDict[node] = pathsDict[current[0]] + [node]
+            numExpanded += 1
+
+        if endNode in current[1]:
+            isFound = True
+        else:
+            current = next(iter)
+
+
+    return pathsDict[endNode], numExpanded
+
+# Same as breadthFirstPath but returns the number of nodes expanded as well
+def aStarPathS(G, startNode, endNode):
     global numExpanded
     numExpanded = 0
 
