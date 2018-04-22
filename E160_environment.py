@@ -72,7 +72,10 @@ class E160_environment:
         # end = [2, 1]
 
         for r in self.robots:
-            r.route = directions(self.walls, start, end, True)
+            if self.robot_mode == "SIMULATION MODE":
+                r.route = directions(self.walls, start, end, True)
+            else:
+                r.route = 
             print(r.route)
 
     def update_robots(self, deltaT):
