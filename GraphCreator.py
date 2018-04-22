@@ -1,7 +1,7 @@
 import networkx as nx
 import math
 from Node import *
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from motionPlanning import *
 #from E160_wall import *
 
@@ -178,6 +178,40 @@ def drawGraph(G):
 
     plt.show()
 
+# Get some interesting statistics comparing breadth first search to aStar search
+# in 1000 random graphs with 1000 nodes each.  The start and end nodes are the
+# same for each algorithm on the same graph, but are randomly selected when the
+# graphs are generated
+def statistics():
+    numGraphs = 1000
+
+    breadthDists = [float('inf')]*numGraphs
+    aStarDists = [float('inf')]*numGraphs
+    breadthNodes = [float('inf')]*numGraphs
+    aStarNodes = [float('inf')]*numGraphs
+
+    for i in range(numGraphs):
+        G, startNode, endNode = randGraphMaze(1000, True)
+
+        breadthPath, breadthNodes[i] = breadthFirstPath(G, startNode, endNode)
+        breadthDist = pathDistance(G, breadthPath)
+
+        aPath, aStarNodes[i] = aStarPath(G, startNode, endNode)
+        aStarDist = pathDistance(G, aPath)
+        aStarWeights = sum(G[u][v].get('length', 1) for u, v in zip(aPath[:-1], aPath[1:]))
+
+        breadthDists[i] = breadthDist
+        aStarDists[i] = aStarDist
+
+
+    avBreadthDist = sum(breadthDists)/len(breadthDists)
+    avAStarDist = sum(aStarDists)/len(aStarDists)
+    avBreadthNodes = sum(breadthNodes)/len(breadthNodes)
+    avAStarNodes = sum(aStarNodes)/len(aStarNodes)
+
+    return avBreadthDist, avAStarDist, avBreadthNodes, avAStarNodes
+
+
 # Calculate the distance between two nodes
 def distance(nodeA, nodeB):
     return ((nodeA.x-nodeB.x)**2 + (nodeA.y-nodeB.y)**2)**0.5
@@ -225,18 +259,25 @@ if __name__ == '__main__':
     G = graphFromLines(lines)
 
     print('*'*28, 'Test motion planning', '*'*28)
-    startNode = Node(15, -2, str(lines[8][2:4]))
-    endNode = Node(2, 1, str(lines[3][0:2]))
-    breadthPath = breadthFirstPath(G, startNode, endNode)
-    aPath = aStarPath(G, startNode, endNode)
+    sNode = Node(15, -2, str(lines[8][2:4]))
+    eNode = Node(2, 1, str(lines[3][0:2]))
+    breadthPath, breadthNodes = breadthFirstPath(G, sNode, eNode)
+    aPath, aNodes = aStarPath(G, sNode, eNode)
     print('Breadth path: ', breadthPath)
     print('A* path: ', aPath)
 
 
-    print('\nBreadth Distance: ', pathDistance(breadthPath))
-    print('A* Distance: ', pathDistance(aPath))
+    print('\nBreadth Distance: ', pathDistance(G, breadthPath))
+    print('A* Distance: ', pathDistance(G, aPath))
 
     print('\nBreadth Directions: ', pathToDirections(breadthPath))
     print('A* Directions: ', pathToDirections(aPath))
+
+    print('*'*28, 'Search Statistics', '*'*28)
+
+    avBreadthDist, avAStarDist, avBreadthNodes, avAStarNodes = statistics()
+
+    print('Average distance for BFS vs aStar:', avBreadthDist, 'vs.', avAStarDist)
+    print('Average number of nodes checked for BFS vs aStar:', avBreadthNodes, 'vs.', avAStarNodes)
 
     drawGraph(G)
