@@ -13,7 +13,7 @@ class E160_environment:
         self.width = 3.5
         self.height = 3.0
          # create vars for hardware vs simulation
-        self.robot_mode = "SIMULATION MODE"  # "SIMULATION MODE" or "HARDWARE MODE"
+        self.robot_mode = "HARDWARE MODE"  # "SIMULATION MODE" or "HARDWARE MODE"
         self.control_mode = "LINE FOLLOW MODE"
 
         self.walls = []
@@ -46,7 +46,7 @@ class E160_environment:
         # self.walls.append(E160_wall([0.5, -0.5, 1.0, -0.5], "horizontal"))
         # self.walls.append(E160_wall([0.0, -0.5, 0.0, -1.0], "vertical"))
 
-       
+
 
         # setup xbee communication
         if (self.robot_mode == "HARDWARE MODE"):
@@ -67,17 +67,17 @@ class E160_environment:
             r = E160_robot(self, '\x00\x0C', i)
             self.robots.append(r)
 
-    def plan_path(self, directions = None):
+    def plan_path(self, dirs = None):
         start = [round(15/5, 1)-1.5, round(-2/5, 1)-1]
         end = [round(2/5, 1)-1.5, round(1/5, 1)-1]
         # start = [15, -2]
         # end = [2, 1]
 
         for r in self.robots:
-            if directions is None:
+            if dirs is None:
                 r.route = directions(self.walls, start, end, True)
             else:
-                r.route = directions
+                r.route = dirs
             print(r.route)
 
     def update_robots(self, deltaT):

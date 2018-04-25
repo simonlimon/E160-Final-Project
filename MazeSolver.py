@@ -7,13 +7,13 @@ from motionPlanning import aStarPath, breadthFirstPath, pathDistance, pathToDire
 
 def main(filename):
     start_time = time.time()
-    img = prepare_img(filename, False)
+    img = prepare_img(filename, True)
     print('Time to prepare image: ', time.time() - start_time)
 
-    start_time = time.time()    
+    start_time = time.time()
     G = build_graph(img)
     print('Time to build graph: ', time.time() - start_time)
-    
+
     start, end = select_start_end(G, img)
 
     breadthPath = breadthFirstPath(G, start, end)
@@ -32,4 +32,3 @@ def main(filename):
 
 if __name__ == '__main__':
     main(sys.argv[1])
-    

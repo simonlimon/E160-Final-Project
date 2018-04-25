@@ -101,7 +101,7 @@ void readCommand()
   {
     readMotorCommand(motorValues, currentCommand + 1);
   } 
-  else if (currentCommand[0] = 'S')
+  else if (currentCommand[0] == 'S')
   {
     sendSensorData();
   }

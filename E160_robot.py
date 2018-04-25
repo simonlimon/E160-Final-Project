@@ -116,13 +116,18 @@ class E160_robot:
 
             update = self.environment.xbee.wait_read_frame()
 
-            data = update['rf_data'].decode().split(' ')[:-1]
+            data = update['rf_data'].decode().split(' ')
             data = [int(x) for x in data]
             encoder_measurements = data[-2:]
-            range_measurements = data[0]
-            light_measurements = data[1:-2]
+            range_measurements = [data[0], 0, 0]
+            light_raw = data[1:-2][::-1]
+            offset = 75
+            threshold = [776 + offset, 831 + offset, 591 + offset, 637 + offset, 743 + offset][::-1]
+            light_measurements = [1 if l > thresh else 0 for l, thresh in zip(light_measurements_raw, threshold)]
 
             print('light measurements:', light_measurements)
+            print('raw measurements:', light_measurements_raw)
+
 
             # TODO: Update threshold
             thresh = 0
