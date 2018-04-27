@@ -190,8 +190,10 @@ def statistics(numGraphs, graphSize):
     aStarDists = [float('inf')]*numGraphs
     breadthNodes = [float('inf')]*numGraphs
     aStarNodes = [float('inf')]*numGraphs
+    diffNodes = [float('inf')]*numGraphs
     breadthTimes = [float('inf')]*numGraphs
     aStarTimes = [float('inf')]*numGraphs
+    diffTimes = [float('inf')]*numGraphs
 
     for i in range(numGraphs):
         G, startNode, endNode = randGraphMaze(graphSize, True)
@@ -209,12 +211,17 @@ def statistics(numGraphs, graphSize):
         breadthDists[i] = breadthDist
         aStarDists[i] = aStarDist
 
+        diffTimes[i] = aStarTimes[i] - breadthTimes[i]
+        diffNodes[i] = aStarNodes[i] - breadthNodes[i]
+
     breadthDists = np.array(breadthDists)
     breadthNodes = np.array(breadthNodes)
     breadthTimes = np.array(breadthTimes)
     aStarDists = np.array(aStarDists)
     aStarNodes = np.array(aStarNodes)
     aStarTimes = np.array(aStarTimes)
+    diffTimes = np.array(diffTimes)
+    diffNodes = np.array(diffNodes)
 
     avBreadthDist = np.mean(breadthDists)
     stdBreadthDist = np.std(breadthDists)
@@ -234,7 +241,15 @@ def statistics(numGraphs, graphSize):
     avAStarTime = np.mean(aStarTimes)
     stdAStarTime = np.std(aStarTimes)
 
-    return avBreadthDist, stdBreadthDist, avAStarDist, stdAStarDist, avBreadthNodes, stdBreadthNodes, avAStarNodes, stdAStarNodes, avBreadthTime, stdBreadthTime, avAStarTime, stdAStarTime
+    avDiffTime = np.mean(diffTimes)
+    stdDiffTime = np.std(diffTimes)
+
+    avDiffNodes = np.mean(diffNodes)
+    stdDiffNodes = np.std(diffNodes)
+
+    print(diffNodes)
+
+    return avBreadthDist, stdBreadthDist, avAStarDist, stdAStarDist, avBreadthNodes, stdBreadthNodes, avAStarNodes, stdAStarNodes, avBreadthTime, stdBreadthTime, avAStarTime, stdAStarTime, avDiffNodes, stdDiffNodes, avDiffTime, stdDiffTime
 
 
 # Calculate the distance between two nodes
@@ -300,13 +315,13 @@ if __name__ == '__main__':
 
     print('*'*28, 'Search Statistics', '*'*28)
 
-    avBreadthDist, stdBreadthDist, avAStarDist, stdAStarDist, avBreadthNodes, stdBreadthNodes, avAStarNodes, stdAStarNodes, avBreadthTime, stdBreadthTime, avAStarTime, stdAStarTime = statistics(100, 1000)
+    avBreadthDist, stdBreadthDist, avAStarDist, stdAStarDist, avBreadthNodes, stdBreadthNodes, avAStarNodes, stdAStarNodes, avBreadthTime, stdBreadthTime, avAStarTime, stdAStarTime, avDiffNodes, stdDiffNodes, avDiffTime, stdDiffTime = statistics(100, 1000)
 
     print('Average distance for BFS vs aStar:', avBreadthDist, 'vs.', avAStarDist)
     print('Average number of nodes checked for BFS vs aStar:', avBreadthNodes, 'vs.', avAStarNodes)
     print('Average time taken for BFS vs aStar:')
     for i in range(1,5):
-        avBreadthDist, stdBreadthDist, avAStarDist, stdAStarDist, avBreadthNodes, stdBreadthNodes, avAStarNodes, stdAStarNodes, avBreadthTime, stdBreadthTime, avAStarTime, stdAStarTime = statistics(100, 10**i)
-        print(10**i, 'nodes:', avBreadthTime, '+/-', stdBreadthTime, 'for', avBreadthNodes, '+/-', stdBreadthNodes, 'nodes vs.', avAStarTime, '+/-', stdAStarTime, 'for', avAStarNodes, '+/-', stdAStarNodes, 'nodes')
+        avBreadthDist, stdBreadthDist, avAStarDist, stdAStarDist, avBreadthNodes, stdBreadthNodes, avAStarNodes, stdAStarNodes, avBreadthTime, stdBreadthTime, avAStarTime, stdAStarTime, avDiffNodes, stdDiffNodes, avDiffTime, stdDiffTime = statistics(100, 10**i)
+        print(10**i, 'nodes:', avBreadthTime, '+/-', stdBreadthTime, 'for', avBreadthNodes, '+/-', stdBreadthNodes, 'nodes vs.', avAStarTime, '+/-', stdAStarTime, 'for', avAStarNodes, '+/-', stdAStarNodes, 'nodes', avDiffTime, '+/-', stdDiffTime, 'for', avDiffNodes, '+/-', stdDiffNodes, 'nodes')
 
     drawGraph(G)
