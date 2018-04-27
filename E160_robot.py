@@ -37,6 +37,7 @@ class E160_robot:
         self.encoder_measurements = [0, 0]
         self.range_measurements = [0, 0, 0]
         self.light_measurements = [0, 0, 0, 0, 0]
+        self.calibrated_lm = [-1,-1,-1,-1,-1]
         self.last_simulated_encoder_R = 0
         self.last_simulated_encoder_L = 0
 
@@ -58,7 +59,7 @@ class E160_robot:
         # self.Kalpha = 4
         # self.Kbeta = -1.04
 
-        self.max_velocity = 0.05
+        self.max_velocity = 0.01
         self.point_tracked = True
         self.encoder_per_sec_to_rad_per_sec = 10
 
@@ -88,6 +89,19 @@ class E160_robot:
         self.last_simulated_encoder_L = 0
         self.point_tracked = True
 
+    def calibrate(self):
+        sum = [0, 0, 0, 0, 0]
+        numSamps = 20
+
+        for i in range(numSamps):
+            _, _, light = self.raw_measurements()
+
+            sum = [j + k for j, k in zip(sum, light)]
+
+        self.calibrated_lm = [i/numSamps for i in sum]
+
+        input('Press enter to start traversing the maze.')
+
     def update(self, deltaT):
 
         # get sensor measurements
@@ -108,25 +122,32 @@ class E160_robot:
         # send the control measurements to the robot
         self.send_control(self.R, self.L, deltaT)
 
+    def raw_measurements(self):
+        command = '$S @'
+        self.environment.xbee.tx(dest_addr=self.address, data=command)
+
+        update = self.environment.xbee.wait_read_frame()
+
+        data = update['rf_data'].decode().split(' ')
+        data = [int(x) for x in data]
+        encoder_measurements = data[-2:]
+        range_measurements = [data[0], 0, 0]
+        light_raw = data[1:-2][::-1]
+
+        return range_measurements, encoder_measurements, light_raw
+
     def update_sensor_measurements(self, deltaT):
 
         if self.environment.robot_mode == "HARDWARE MODE":
-            command = '$S @'
-            self.environment.xbee.tx(dest_addr=self.address, data=command)
+            range_measurements, encoder_measurements, light_raw = self.raw_measurements()
 
-            update = self.environment.xbee.wait_read_frame()
-
-            data = update['rf_data'].decode().split(' ')
-            data = [int(x) for x in data]
-            encoder_measurements = data[-2:]
-            range_measurements = [data[0], 0, 0]
-            light_raw = data[1:-2][::-1]
-            offset = 75
-            threshold = [776 + offset, 831 + offset, 591 + offset, 637 + offset, 743 + offset][::-1]
-            light_measurements = [1 if l > thresh else 0 for l, thresh in zip(light_measurements_raw, threshold)]
+            offset = 150
+            threshold = [i + offset for i in self.calibrated_lm]
+            light_measurements = [1 if l > thresh else 0 for l, thresh in zip(light_raw, threshold)]
 
             print('light measurements:', light_measurements)
-            print('raw measurements:', light_measurements_raw)
+            print('threshold:', threshold)
+            print('raw measurements:', light_raw)
 
 
             # TODO: Update threshold
@@ -137,8 +158,6 @@ class E160_robot:
                     light_measurements[i] = 1
                 else:
                     light_measurements[i] = 0
-
-
 
         elif self.environment.robot_mode == "SIMULATION MODE":
             encoder_measurements = self.simulate_encoders(
@@ -215,20 +234,29 @@ class E160_robot:
         elif self.environment.control_mode == "LINE FOLLOW MODE":
             if not self.point_tracked:
                 desiredWheelSpeedR, desiredWheelSpeedL = self.point_tracker_control()
-            else:
+            elif self.route_step < len(self.route) + 2:
                 desiredWheelSpeedR, desiredWheelSpeedL = self.line_follow_control()
+            else:
+                desiredWheelSpeedR = 100
+                desiredWheelSpeedL = -100
 
         return desiredWheelSpeedR, desiredWheelSpeedL
 
     def line_follow_control(self):
-        if sum(self.light_measurements) >= 3: # Intersection
+        if sum(self.light_measurements) >= 3 and (self.light_measurements[0] or self.light_measurements[-1]): # Intersection
             target_t = - math.pi/2 - sum(self.route[:self.route_step]) * math.pi/2
             target_t = self.angle_wrap(target_t)
+            print('des; est before')
+            print(self.state_des)
+            print(self.state_est)
             self.state_des.set_state(
-                self.state_est.x - 0.1 * math.cos(target_t),
-                self.state_est.y - 0.1 * math.sin(target_t),
+                self.state_est.x + 0.1 * math.cos(target_t),
+                self.state_est.y + 0.1 * math.sin(target_t),
                 target_t
             )
+            print('des; est after')
+            print(self.state_des)
+            print(self.state_est)
             self.route_step += 1
             self.point_tracked = False
             return 0, 0
@@ -237,13 +265,19 @@ class E160_robot:
             return 0, 0
 
         # Follow the line:
-        left = 50
-        right = 50
+        desiredVelocityR = 0.01
+        desiredVelocityL = 0.01
+
+        control = self.velocity_to_wheel_control(
+            desiredVelocityL, desiredVelocityR)
+        desiredWheelSpeedL = control[0]
+        desiredWheelSpeedR = control[1]
+
         for i in range(len(self.light_measurements)):
             if self.light_measurements[i] == 1:
-                left -= (i-2) * 2
-                right += (i-2) * 2
-        return left, right
+                desiredWheelSpeedL -= (i-2) * 2
+                desiredWheelSpeedR += (i-2) * 2
+        return desiredWheelSpeedL, desiredWheelSpeedR
 
     def point_tracker_control(self):
         # If the desired point is not tracked yet, then track it

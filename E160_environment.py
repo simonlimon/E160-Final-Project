@@ -67,6 +67,11 @@ class E160_environment:
             r = E160_robot(self, '\x00\x0C', i)
             self.robots.append(r)
 
+            if self.robot_mode == "HARDWARE MODE":
+                input("Press enter to begin calibration.")
+                print('starting calibration')
+                r.calibrate()
+
     def plan_path(self, dirs = None):
         start = [round(15/5, 1)-1.5, round(-2/5, 1)-1]
         end = [round(2/5, 1)-1.5, round(1/5, 1)-1]

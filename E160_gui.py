@@ -26,8 +26,8 @@ def gui_main(directions = None):
         environment.log_data()
 
         # maintain timing
-        time.sleep(deltaT)
+        if environment.robot_mode == "SIMULATION MODE":
+            time.sleep(deltaT)
 
 if __name__ == '__main__':
     gui_main()
-
