@@ -4,11 +4,32 @@
 
 ## Solution
 
+### Path Optimization
+![image](/Presentation/bfs.gif)
+![image](/Presentation/astar.gif)
+
+### Line Following
+![image](/Presentation/sensors.png)
+![image](/Presentation/reflectance.png)
+
+### Route Following
+```python
+directions = [-1 turn left, 0 go straight, 1 turn right]
+
+def line_follow_control(self):
+	if at intersection:
+		rotate according to directions
+		move off intersection
+	else:
+		move forward staying on line
+```
+
 ## Results
 
 ### Success!
 <iframe width="560" height="315" src="https://drive.google.com/open?id=1pcBH6b0eSH8b0hWmrWPS9H6eVNmzyZ7X" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
+### Statistics
 Figure ___ shows a graph of the difference between the number of nodes expanded
 for aStar and BFS against the number of nodes in the maze graph.  The data was
 obtained by taking the mean and standard deviation of the number of nodes
