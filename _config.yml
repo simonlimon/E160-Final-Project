@@ -1,2 +1,4 @@
 theme: jekyll-theme-cayman
-title: Maze navigation
+title: Optimum Path Planning for Arbitrary Mazes
+description: Hill Balliet and Simon Posada Fishman. \n HMC *Autonomous Robot Navigation* Spring 2018
+show_downloads: true

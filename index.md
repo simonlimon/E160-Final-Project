@@ -1,6 +1,6 @@
-# Optimum Path Planning for Arbitrary Mazes
-
 ## Problem Definition
+
+
 
 ## Solution
 
