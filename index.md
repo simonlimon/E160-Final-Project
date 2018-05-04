@@ -47,7 +47,7 @@ def line_follow_control(self):
 
 ### Success!  
 <iframe width="560" height="315" src="https://drive.google.com/open?id=1pcBH6b0eSH8b0hWmrWPS9H6eVNmzyZ7X" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>  
-
+If the video won't load, try (this link.)[https://drive.google.com/open?id=1pcBH6b0eSH8b0hWmrWPS9H6eVNmzyZ7X]
 ### Statistics
 Figure S.1 shows a graph of the difference between the number of nodes expanded
 for aStar and BFS against the number of nodes in the maze graph.  The data was
