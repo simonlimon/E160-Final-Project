@@ -90,16 +90,3 @@ R. Paranjpe and A. Saied, “A Maze Solver for Android.” Stanford Digital Stac
 
 Richard T. Vannoy II, “Design a Line Maze Solving Robot” https://www.pololu.com/file/0J195/line-maze-algorithm.pdf
 
-Testing website.
-
-![image](/maze_photos/cycles.jpg)
-
-## Adding more things to see how they look
-
-[link to repo](https://github.com/simonlimon/E160-Final-Project)
-
-### More data
-
-1. yes
-2. this
-3. works
