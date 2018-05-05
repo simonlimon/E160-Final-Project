@@ -6,7 +6,7 @@ Figure CH.1 shows the problem at hand decomposed in four progressive steps, list
 
 ![image](/Presentation/steps.png)
 
-*Figure CH.1: Animation of BFS on left and A\* on right.*
+*Figure PD.1: .*
 
 ## Solution
 
@@ -55,8 +55,8 @@ best performance.  BFS is a complete algorithm, but A\* is both complete and
 optimal in terms of shortest distance given weighted edges.  Figure PO.1 shows animations of BFS and A\*.  
 
 ![image](/Presentation/bfs.gif)
-![image](/Presentation/astar.gif)  
-*Figure PO.1: Animation of BFS on left and aStar on right.*
+![image](/Presentation/A\*.gif)  
+*Figure PO.1: Animation of BFS on left and A\* on right.*
 
 ### Line Following
 In order to stay on the lines drawn in blue tape, the robot uses a set of five
@@ -95,7 +95,7 @@ def line_follow_control(self):
 If the video won't load, try [this link.](https://drive.google.com/open?id=1pcBH6b0eSH8b0hWmrWPS9H6eVNmzyZ7X)  
 ### Statistics
 Figure S.1 shows a graph of the difference between the number of nodes expanded
-for aStar and BFS against the number of nodes in the maze graph.  The data was
+for A\* and BFS against the number of nodes in the maze graph.  The data was
 obtained by taking the mean and standard deviation of the number of nodes
 expanded for each algorithm on 1000 randomly generated graphs.  
 
@@ -103,17 +103,17 @@ expanded for each algorithm on 1000 randomly generated graphs.
 *Figure S.1: Difference between the number of nodes expanded for each algorithm*
 
 Figure S.2 shows a graph of the amount of time taken to arrive at a solution for
-aStar and BFS against the number of nodes in each maze graph.  The data was
+A\* and BFS against the number of nodes in each maze graph.  The data was
 obtained by taking the mean and standard deviation of the number of nodes
 expanded for each algorithm on 1000 randomly generated graphs.  
 
 ![image](/Presentation/AlgorithmSpeedComparison.png)  
 *Figure S.2: Time taken to find solution for each algorithm*
 
-Figure S.3 shows a graph comparing the path distance of the solution for aStar
+Figure S.3 shows a graph comparing the path distance of the solution for A\*
 and BFS.  The data was obtained by taking the mean of the path distance for each
 algorithm on 1000 randomly generated graphs with 1000 nodes in them.  On average
-aStar produced a path that was 1005 px or 29% shorter than BFS.  
+A\* produced a path that was 1005 px or 29% shorter than BFS.  
 
 ![image](/Presentation/pathDist.png)  
 *Figure S.3: Path distance for solution of each algorithm*
