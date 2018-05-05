@@ -16,9 +16,9 @@ The first step consists of encoding the maze as a graph in order to be able to p
 
 In order to build this graph we used various image processing techniques from the Python [scikit-image](http://scikit-image.org/docs/dev/api/skimage.html) library. Consider the example image of a maze shown in Figure ME.1. The first step we took was to skeletonize this image, as show in Figure ME.2. We then tried unsuccessfully to construct a graph by finding the lines in the image through a Hough transform and calculating the intersections geometrically, but there were too many lines detected by the transform as shown in Figure ME.3. Our second approach was to use a corner detection method, shown in Figure ME.4, but we then struggled when trying to connect the detected corners correctly in a graph. 
 
-| ![image](/Presentation/raw.jpg) | ![image](/Presentation/skel.png) |
-| :-----------------------------: | :------------------------------: |
-|                                 |                                  |
+
+
+![image](/Presentation/raw.jpg) ![image](/Presentation/skel.png)
 
 *Figures ME.1 and ME.2: Raw and skeletonized versions of the maze.*
 
